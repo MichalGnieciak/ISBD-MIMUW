@@ -74,6 +74,12 @@ fn main() {
         return;
     }
     let total_size = metadata.unwrap().len();
+
+    if total_size == 0 {
+        eprintln!("File is empty");
+        return;
+    }
+
     let num_blocks = (total_size + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
     let mut buffer = vec![0u8; BLOCK_SIZE as usize];
