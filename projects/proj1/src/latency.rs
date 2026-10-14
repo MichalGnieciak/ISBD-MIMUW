@@ -134,6 +134,12 @@ fn main() {
         return;
     }
     let total_size = metadata.unwrap().len();
+
+    if total_size == 0 {
+        eprintln!("File is empty");
+        return;
+    }
+
     let num_blocks = (total_size + BLOCK_SIZE - 1) / BLOCK_SIZE;
     let random_iter = RandomOrderIterator::with_seed(num_blocks, RAND_SEED);
 
