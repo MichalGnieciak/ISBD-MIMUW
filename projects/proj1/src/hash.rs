@@ -6,6 +6,7 @@ pub fn sum_block_hash(result: &mut Vec<u8>, block_hash: &[u8; 16]) {
     }
 }
 
+#[allow(dead_code)]
 pub fn stretch_md5(block_hash: &[u8], k: u64) -> Digest {
     let mut result = md5::compute(block_hash);
     for _ in 1..k {
