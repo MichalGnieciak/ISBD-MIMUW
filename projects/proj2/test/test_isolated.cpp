@@ -89,6 +89,6 @@ int main() {
     test_bool(rng, passes);
     test_varchar(rng, passes);
     
-    std::cout << "All tests passed successfully!\n";
+    std::cout << "SUCCESS: All isolated Tests Passed!\n";
     return 0;
 }

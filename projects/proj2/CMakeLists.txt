@@ -11,14 +11,25 @@ add_library(DbCore
     src/compression/decoding.cpp
     src/utils/random_utils.cpp
     src/io/serializer.cpp
+    src/io/deserializer.cpp
 )
 target_link_libraries(DbCore PUBLIC zstd::libzstd_shared)
 target_include_directories(DbCore PUBLIC src/compression src/io src/utils)
 
 # Executables
+
 # Tools
+# Sample generation
 add_executable(generate_sample tools/generate_sample.cpp)
 target_link_libraries(generate_sample PRIVATE DbCore)
+# Metrics calculation
+add_executable(analyze_db tools/analyze_db.cpp)
+target_link_libraries(analyze_db PRIVATE DbCore zstd::libzstd_shared)
+
+# Tests
 # Isolated Tests
 add_executable(test_isolated test/test_isolated.cpp)
 target_link_libraries(test_isolated PRIVATE DbCore)
+# End-to-end Test
+add_executable(test_e2e test/test_e2e.cpp)
+target_link_libraries(test_e2e PRIVATE DbCore zstd::libzstd_shared)
