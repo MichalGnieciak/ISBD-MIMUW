@@ -17,18 +17,30 @@ struct GlobalHeader {
     char magic[4] = {'I', 'S', 'B', 'D'}; // Identifying the file format
     uint64_t num_rows;                    // Total number of rows (m)
     uint32_t num_columns;                 // Total number of columns (n)
+    uint32_t num_row_groups;              // Total number of batches
+    // Keeping the total number of batches allows for:
+    // Silent Corruption Detection
+    // Progress Tracking and Pre-allocation
 };
 
 // Column Metadata (immediately after the GlobalHeader, repeated for each column)
-struct ColumnMetadata {
-    DataType type;           // The data type of this column
-    uint64_t byte_offset;    // The absolute byte position in the file where this column's data begins
+struct ColumnDef {
+    DataType type;
+};
 
+// Batch Metadata (marks the beginning of a new Batch on disk)
+struct RowGroupHeader {
+    uint64_t num_rows; // BATCH_SIZE (BATCH_SIZE> for last batch)
+};
+
+// Chunk Metadata (repeated for each column after a RowGroupHeader)
+// Tells the deserializer exactly how many bytes to read for this specific chunk.
+struct ChunkMetadata {
     //              INT64   BOOL    VARCHAR
     // stream1_size bytes   bytes   index blob
     // stream2_size   0       0     text blob
-    uint64_t stream1_size;  
-    uint64_t stream2_size;
+    uint64_t stream1_size;
+    uint64_t stream2_size; 
 };
 
 #pragma pack(pop)
