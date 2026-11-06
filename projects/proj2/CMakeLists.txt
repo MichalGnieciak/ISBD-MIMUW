@@ -31,13 +31,7 @@ add_executable(generate_sample tools/generate_sample.cpp)
 target_link_libraries(generate_sample PRIVATE DbCore)
 # Metrics calculation
 add_executable(analyze_db tools/analyze_db.cpp)
-target_link_libraries(analyze_db PRIVATE DbCore zstd::libzstd_shared)
-# Force optimizations and request a vectorization report
-if(MSVC)
-    target_compile_options(analyze_db PRIVATE /O2 /arch:AVX2 /Qvec-report:2)
-else()
-    target_compile_options(analyze_db PRIVATE -O3 -march=native -fopt-info-vec)
-endif()
+target_link_libraries(analyze_db PRIVATE DbCore)
 
 # Tests
 # Isolated Tests
@@ -45,4 +39,4 @@ add_executable(test_isolated test/test_isolated.cpp)
 target_link_libraries(test_isolated PRIVATE DbCore)
 # End-to-end Test
 add_executable(test_e2e test/test_e2e.cpp)
-target_link_libraries(test_e2e PRIVATE DbCore zstd::libzstd_shared)
+target_link_libraries(test_e2e PRIVATE DbCore)
