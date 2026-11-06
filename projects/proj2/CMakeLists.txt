@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 3.15)
 project(DbFormat)
 set(CMAKE_CXX_STANDARD 17)
 
+# Flags for SIMD optimisiations
+if(MSVC)
+    add_compile_options(/O2 /arch:AVX2 /Qvec-report:2)
+else()
+    add_compile_options(-O3 -march=native -fopt-info-vec)
+endif()
+
 # ZSTD
 find_package(zstd REQUIRED)
 
@@ -25,6 +32,12 @@ target_link_libraries(generate_sample PRIVATE DbCore)
 # Metrics calculation
 add_executable(analyze_db tools/analyze_db.cpp)
 target_link_libraries(analyze_db PRIVATE DbCore zstd::libzstd_shared)
+# Force optimizations and request a vectorization report
+if(MSVC)
+    target_compile_options(analyze_db PRIVATE /O2 /arch:AVX2 /Qvec-report:2)
+else()
+    target_compile_options(analyze_db PRIVATE -O3 -march=native -fopt-info-vec)
+endif()
 
 # Tests
 # Isolated Tests

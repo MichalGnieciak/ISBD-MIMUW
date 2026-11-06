@@ -58,6 +58,6 @@ int main() {
     std::this_thread::sleep_for(std::chrono::seconds(2));
 
     serializer.close();
-    std::cout << "Successfully wrote " << TOTAL_ROWS << " rows to sample.mim\n";
+    std::cout << "Successfully wrote " << TOTAL_ROWS << " rows to sample.isbd\n";
     return 0;
 }

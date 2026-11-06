@@ -1,13 +1,35 @@
 #include "../io/deserializer.h"
 #include <iostream>
 #include <vector>
-// std::log2
-#include <cmath>
+#include <cmath> // std::log2
 #include <array>
+#include <string>
+#include <filesystem> 
 
-int main() {
+int main(int argc, char* argv[]) {
+    std::string filepath;
+
+    // If an argument is provided, override the default
+    if (argc >= 2) {
+        filepath = argv[1];
+        std::cout << "Using provided file: " << filepath << "\n";
+    } 
+    // Otherwise, fall back to the default project path
+    else {
+        filepath = "../projects/proj2/test/resources/sample.isbd";
+        std::cout << "No file provided. Defaulting to: " << filepath << "\n";
+      
+        if (!std::filesystem::exists(filepath)) {
+            std::cerr << "\n[ERROR] Default file not found at: " << filepath << "\n";
+            std::cerr << "Please ensure the file exists, or provide a custom path.\n";
+            std::cerr << "Usage:   " << argv[0] << " [path_to_isbd_file]\n";
+            return 1;
+        }
+    }
+
     try {
-        Deserializer deserializer("sample.isbd");
+        // Pass the resolved filepath to the Deserializer
+        Deserializer deserializer(filepath);
         const auto& schema = deserializer.get_schema();
         size_t num_columns = schema.size();
 
@@ -33,7 +55,7 @@ int main() {
                 } 
                 else if (schema[i] == DataType::BOOL) {
                     const auto& data = std::get<std::vector<uint8_t>>(batch.columns[i]);
-                    for (uint8_t val : data) if (val == 1) bool_ones[i]++;
+                    for (uint8_t val : data) bool_ones[i] += val;
                     bool_totals[i] += data.size();
                 } 
                 else if (schema[i] == DataType::VARCHAR) {
@@ -42,7 +64,7 @@ int main() {
                         varchar_total_counts[i] += str.length();
                         for (char c : str) {
                             varchar_char_arrays[i][static_cast<unsigned char>(c)]++;
-                         }
+                        }
                     }
                 }
             }
