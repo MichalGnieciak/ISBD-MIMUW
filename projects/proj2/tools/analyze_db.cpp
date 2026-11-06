@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     } 
     // Otherwise, fall back to the default project path
     else {
-        filepath = "../projects/proj2/test/resources/sample.isbd";
+        filepath = "../test/resources/sample.isbd";
         std::cout << "No file provided. Defaulting to: " << filepath << "\n";
       
         if (!std::filesystem::exists(filepath)) {
