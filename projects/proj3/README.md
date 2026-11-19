@@ -46,3 +46,19 @@ Expected response:
 ```
 
 ---
+## Running Unit Tests
+
+The `test_metastore` suite verifies table validation, persistence across simulated server restarts, RAII deferred file deletion during active `SELECT` queries, `.tmp` crash recovery, and CRC32 corruption detection.
+
+### Inside Docker (No Local C++ Toolchain Required)
+Build the `builder` stage and execute the test binary with `-t` (for immediate stdout flushing):
+```bash
+docker build --target builder -t isbd-test -f Dockerfile ../..
+docker run --rm -t isbd-test /app/build/test_metastore
+```
+
+### Natively on Linux
+After building with `make all`:
+```bash
+./build/test_metastore
+```

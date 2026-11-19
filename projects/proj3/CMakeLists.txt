@@ -14,7 +14,8 @@ find_package(Threads REQUIRED)
 find_package(zstd REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
-# Reusing Storage Engine (DbCore)
+# Libraries
+# Storage Engine (DbCore)
 set(PROJ2_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../proj2")
 add_library(DbCore STATIC
     "${PROJ2_DIR}/src/compression/encoding.cpp"
@@ -29,11 +30,18 @@ target_include_directories(DbCore PUBLIC
     "${PROJ2_DIR}/src/utils"
 )
 target_link_libraries(DbCore PUBLIC zstd::libzstd_shared)
+# Metastore
+add_library(Metastore STATIC
+    src/metastore/metastore.cpp
+)
+target_include_directories(Metastore PUBLIC src)
+target_link_libraries(Metastore PUBLIC
+    Threads::Threads
+    nlohmann_json::nlohmann_json
+)
 
 # Executables
-add_executable(isbd_server
-    src/main.cpp
-)
+add_executable(isbd_server src/main.cpp)
 target_include_directories(isbd_server PRIVATE src)
 target_link_libraries(isbd_server PRIVATE
     DbCore
@@ -41,3 +49,8 @@ target_link_libraries(isbd_server PRIVATE
     nlohmann_json::nlohmann_json
     cpp-httplib
 )
+
+# Tests
+# Metastore test
+add_executable(test_metastore test/test_metastore.cpp)
+target_link_libraries(test_metastore PRIVATE Metastore)
