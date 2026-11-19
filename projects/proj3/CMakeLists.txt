@@ -1,0 +1,43 @@
+cmake_minimum_required(VERSION 3.15)
+project(IsbdDbmsServer)
+set(CMAKE_CXX_STANDARD 17)
+
+# Flags for SIMD operations
+# for portable Docker images -O3 -mavx2 is safer than -march=native if building on one CPU and running on another.
+if(MSVC)
+    add_compile_options(/O2 /arch:AVX2)
+else()
+    add_compile_options(-O3 -mavx2)
+endif()
+
+find_package(Threads REQUIRED)
+find_package(zstd REQUIRED)
+find_package(nlohmann_json REQUIRED)
+
+# Reusing Storage Engine (DbCore)
+set(PROJ2_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../proj2")
+add_library(DbCore STATIC
+    "${PROJ2_DIR}/src/compression/encoding.cpp"
+    "${PROJ2_DIR}/src/compression/decoding.cpp"
+    "${PROJ2_DIR}/src/utils/random_utils.cpp"
+    "${PROJ2_DIR}/src/io/serializer.cpp"
+    "${PROJ2_DIR}/src/io/deserializer.cpp"
+)
+target_include_directories(DbCore PUBLIC
+    "${PROJ2_DIR}/src/compression"
+    "${PROJ2_DIR}/src/io"
+    "${PROJ2_DIR}/src/utils"
+)
+target_link_libraries(DbCore PUBLIC zstd::libzstd_shared)
+
+# Executables
+add_executable(isbd_server
+    src/main.cpp
+)
+target_include_directories(isbd_server PRIVATE src)
+target_link_libraries(isbd_server PRIVATE
+    DbCore
+    Threads::Threads
+    nlohmann_json::nlohmann_json
+    cpp-httplib
+)
