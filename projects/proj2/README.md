@@ -9,13 +9,35 @@ This repository contains a custom, columnar database engine and file format impl
 - **CMake** (v3.15+)
 - **ZSTD** development libraries installed on the system
 
-### Compilation
-The build system is configured to optimize the core database engine using `-O3` and `-march=native` (or `/O2 /arch:AVX2` on MSVC) to unlock SIMD vectorization.
-
-Make sure you are in the repo folder.
+Before building on a Linux system (e.g., Ubuntu/Debian), please install the required ZSTD development package:
 
 ```bash
-cd projects/proj2
+sudo apt-get update
+sudo apt-get install libzstd-dev
+```
+
+### Compilation
+---
+#### Linux
+The build system is configured to optimize the core database engine using `-O3` and `-march=native` (or `/O2 /arch:AVX2` on MSVC) to unlock SIMD vectorization.
+
+Make sure you are in the folder where Makefile for proj2 is located (/proj2 root).
+
+```bash
+make all
+```
+
+To clean the build environment:
+
+```bash
+make clean
+```
+---
+#### Windows
+
+Make sure you are in the projects root repository (/proj2)
+
+```bash
 mkdir build
 cd build
 cmake ..
@@ -27,24 +49,24 @@ After a successful build, all executables will be located in the `build` directo
 
 **Run the Tests:**
 ```bash
-./test_isolated.exe
-./test_e2e.exe
+./test_isolated
+./test_e2e
 ```
 
 **Generate the Sample Database:**
 
 By default, this generates the required `sample.isbd` file in the `../test/resources/` directory.
 ```bash
-./generate_sample.exe
+./generate_sample
 ```
-*(Optionally, you can pass a custom path: `./generate_sample.exe custom_path/file.isbd`)*
+*(Optionally, you can pass a custom path: `./generate_sample custom_path/file.isbd`)*
 
 **Analyze the Database File:**
 
 
 Run the analyzer to compute the Mean, Binary Entropy, and ASCII frequencies.
 ```bash
-./analyze_db.exe ../test/resources/sample.isbd
+./analyze_db ../test/resources/sample.isbd
 ```
 *(If run without arguments, it will attempt to automatically find the default sample file).*
 
