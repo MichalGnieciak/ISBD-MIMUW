@@ -55,6 +55,7 @@ Build the `builder` stage and execute the test binary with `-t` (for immediate s
 ```bash
 docker build --target builder -t isbd-test -f Dockerfile ../..
 docker run --rm -t isbd-test /app/build/test_metastore
+docker run --rm -t isbd-test /app/build/test_csv_parser
 ```
 
 ### Natively on Linux

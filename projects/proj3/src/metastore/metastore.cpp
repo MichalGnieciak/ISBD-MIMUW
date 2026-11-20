@@ -18,21 +18,21 @@ using json = nlohmann::json;
 
 namespace isbd {
 
-// ColumnType Helpers
+// DataType Helpers
 
-std::string column_type_to_string(ColumnType type) {
+std::string data_type_to_string(DataType type) {
     switch (type) {
-        case ColumnType::INT64:   return "INT64";
-        case ColumnType::BOOL:    return "BOOL";
-        case ColumnType::VARCHAR: return "VARCHAR";
+        case DataType::INT64:   return "INT64";
+        case DataType::BOOL:    return "BOOL";
+        case DataType::VARCHAR: return "VARCHAR";
     }
     return "UNKNOWN";
 }
 
-std::optional<ColumnType> string_to_column_type(const std::string& str) {
-    if (str == "INT64") return ColumnType::INT64;
-    if (str == "BOOL" || str == "BOOLEAN") return ColumnType::BOOL;
-    if (str == "VARCHAR") return ColumnType::VARCHAR;
+std::optional<DataType> string_to_data_type(const std::string& str) {
+    if (str == "INT64") return DataType::INT64;
+    if (str == "BOOL" || str == "BOOLEAN") return DataType::BOOL;
+    if (str == "VARCHAR") return DataType::VARCHAR;
     return std::nullopt;
 }
 
@@ -194,7 +194,7 @@ void Metastore::persist_to_disk() const {
         for (const auto& col : meta.columns) {
             cols_json.push_back({
                 {"name", col.name},
-                {"type", column_type_to_string(col.type)}
+                {"type", data_type_to_string(col.type)}
             });
         }
 
@@ -301,7 +301,7 @@ void Metastore::load_from_disk() {
         meta.name = t_json.at("name").get<std::string>();
 
         for (const auto& c_json : t_json.at("columns")) {
-            auto col_type = string_to_column_type(c_json.at("type").get<std::string>());
+            auto col_type = string_to_data_type(c_json.at("type").get<std::string>());
             if (!col_type) {
                 throw std::runtime_error("Unknown column type in metastore.json");
             }
