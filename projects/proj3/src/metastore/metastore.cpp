@@ -1,4 +1,5 @@
 #include "metastore.h"
+#include "utils/uid.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iomanip>
@@ -95,7 +96,7 @@ std::optional<std::string> Metastore::create_table(
         return std::nullopt;
     }
 
-    std::string table_id = generate_uuid();
+    std::string table_id = generate_uid();
     std::filesystem::create_directories(table_data_dir(table_id));
 
     TableMetadata meta;
@@ -330,23 +331,6 @@ uint32_t Metastore::compute_crc32(const std::string& data) {
         }
     }
     return ~crc;
-}
-
-std::string Metastore::generate_uuid() {
-    static thread_local std::mt19937_64 rng(std::random_device{}());
-    std::uniform_int_distribution<uint64_t> dist;
-
-    uint64_t part1 = dist(rng);
-    uint64_t part2 = dist(rng);
-
-    std::ostringstream oss;
-    oss << std::hex << std::setfill('0')
-        << std::setw(8) << (part1 >> 32) << "-"
-        << std::setw(4) << ((part1 >> 16) & 0xFFFF) << "-"
-        << std::setw(4) << (((part1 & 0xFFFF) & 0x0FFF) | 0x4000) << "-"
-        << std::setw(4) << (((part2 >> 48) & 0x3FFF) | 0x8000) << "-"
-        << std::setw(12) << (part2 & 0xFFFFFFFFFFFFULL);
-    return oss.str();
 }
 
 } // namespace isbd

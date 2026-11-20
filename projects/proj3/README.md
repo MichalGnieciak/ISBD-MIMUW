@@ -46,20 +46,33 @@ Expected response:
 ```
 
 ---
+
 ## Running Unit Tests
 
-The `test_metastore` suite verifies table validation, persistence across simulated server restarts, RAII deferred file deletion during active `SELECT` queries, `.tmp` crash recovery, and CRC32 corruption detection.
+The project includes three CTest suites covering storage persistence, CSV ingestion, and asynchronous query execution:
+- **`test_metastore`** — Schema validation, catalog persistence across restarts, RAII deferred file deletion during active queries, `.tmp` crash recovery, and CRC32 corruption detection.
+- **`test_csv_parser`** — `destinationColumns` mapping validation, multi-batch streaming ingestion (`Batch::BATCH_SIZE`), Lab 2 `Deserializer` round-trips, and fail-fast error cleanup.
+- **`test_query_engine`** — Synchronous `Planner` validation, asynchronous `COPY` → `SELECT` projection pipelines, empty table scans, snapshot isolation, and TOCTOU safety during concurrent `DELETE TABLE`.
 
 ### Inside Docker (No Local C++ Toolchain Required)
-Build the `builder` stage and execute the test binary with `-t` (for immediate stdout flushing):
+Using the provided `Makefile`:
+```bash
+make test-docker
+```
+
+*(Or manually from `projects/proj3` on Windows/Linux:)*
 ```bash
 docker build --target builder -t isbd-test -f Dockerfile ../..
-docker run --rm -t isbd-test /app/build/test_metastore
-docker run --rm -t isbd-test /app/build/test_csv_parser
+docker run --rm -t isbd-test ctest --test-dir /app/build --output-on-failure --verbose
 ```
 
 ### Natively on Linux
-After building with `make all`:
+Using the provided `Makefile`:
 ```bash
-./build/test_metastore
+make test
+```
+
+*(Or manually after `make all`:)*
+```bash
+ctest --test-dir build --output-on-failure --verbose
 ```

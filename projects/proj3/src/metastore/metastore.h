@@ -96,7 +96,6 @@ private:
     void persist_to_disk() const; // Caller must hold unique_lock on mutex_
 
     static uint32_t compute_crc32(const std::string& data);
-    static std::string generate_uuid();
 };
 
 } // namespace isbd
