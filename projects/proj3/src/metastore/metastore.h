@@ -1,4 +1,5 @@
 #pragma once
+#include "format.h"
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -10,18 +11,12 @@
 
 namespace isbd {
 
-enum class ColumnType {
-    INT64,
-    BOOL,
-    VARCHAR
-};
-
-std::string column_type_to_string(ColumnType type);
-std::optional<ColumnType> string_to_column_type(const std::string& str);
+std::string data_type_to_string(DataType type);
+std::optional<DataType> string_to_data_type(const std::string& str);
 
 struct ColumnSchema {
     std::string name;
-    ColumnType type;
+    DataType type;
 };
 
 // RAII wrapper for physical .isbd files.

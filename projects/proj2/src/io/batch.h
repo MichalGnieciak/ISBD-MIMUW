@@ -13,6 +13,10 @@ using ColumnData = std::variant<
 
 // SoA layout
 struct Batch {
+    static constexpr size_t BATCH_SIZE = 8192;
+
     size_t num_rows = 0;
     std::vector<ColumnData> columns; 
+
+    static Batch create_empty(const std::vector<DataType>& schema, size_t reserve_rows = 0);
 };

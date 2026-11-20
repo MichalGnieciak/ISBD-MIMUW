@@ -10,7 +10,6 @@
 #include <chrono>
 
 const size_t TOTAL_ROWS = 100000;
-const size_t BATCH_SIZE = 8192;   // chosen to match L2 Cache & ZSTD
 
 int main() {
     std::random_device rd;
@@ -27,7 +26,7 @@ int main() {
     size_t rows_written = 0;
 
     while (rows_written < TOTAL_ROWS) {
-        size_t current_batch_size = std::min(BATCH_SIZE, TOTAL_ROWS - rows_written);
+        size_t current_batch_size = std::min(Batch::BATCH_SIZE, TOTAL_ROWS - rows_written);
         Batch batch;
         batch.num_rows = current_batch_size;
         

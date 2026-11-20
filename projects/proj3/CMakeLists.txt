@@ -21,6 +21,7 @@ add_library(DbCore STATIC
     "${PROJ2_DIR}/src/compression/encoding.cpp"
     "${PROJ2_DIR}/src/compression/decoding.cpp"
     "${PROJ2_DIR}/src/utils/random_utils.cpp"
+    "${PROJ2_DIR}/src/io/batch.cpp"
     "${PROJ2_DIR}/src/io/serializer.cpp"
     "${PROJ2_DIR}/src/io/deserializer.cpp"
 )
@@ -31,13 +32,19 @@ target_include_directories(DbCore PUBLIC
 )
 target_link_libraries(DbCore PUBLIC zstd::libzstd_shared)
 # Metastore
-add_library(Metastore STATIC
-    src/metastore/metastore.cpp
-)
+add_library(Metastore STATIC src/metastore/metastore.cpp)
 target_include_directories(Metastore PUBLIC src)
 target_link_libraries(Metastore PUBLIC
+    DbCore
     Threads::Threads
     nlohmann_json::nlohmann_json
+)
+# CSV parser
+add_library(CsvParser STATIC src/csv/csv_parser.cpp)
+target_include_directories(CsvParser PUBLIC src)
+target_link_libraries(CsvParser PUBLIC
+    Metastore
+    DbCore
 )
 
 # Executables
@@ -54,3 +61,6 @@ target_link_libraries(isbd_server PRIVATE
 # Metastore test
 add_executable(test_metastore test/test_metastore.cpp)
 target_link_libraries(test_metastore PRIVATE Metastore)
+# CSV parser test
+add_executable(test_csv_parser test/test_csv_parser.cpp)
+target_link_libraries(test_csv_parser PRIVATE CsvParser)

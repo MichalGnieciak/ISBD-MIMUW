@@ -1,19 +1,11 @@
 #include "metastore/metastore.h"
-
+#include "test_utils.h"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-#define CHECK(cond) \
-    do { \
-        if (!(cond)) { \
-            throw std::runtime_error(std::string("Check failed: ") + #cond + \
-                                     " at line " + std::to_string(__LINE__)); \
-        } \
-    } while (0)
 
 namespace fs = std::filesystem;
 using namespace isbd;
@@ -24,23 +16,23 @@ void test_create_and_validation(const fs::path& dir) {
 
     std::vector<ValidationProblem> problems;
     auto id1 = ms.create_table("users", {
-        {"id", ColumnType::INT64},
-        {"username", ColumnType::VARCHAR},
-        {"active", ColumnType::BOOL}
+        {"id", DataType::INT64},
+        {"username", DataType::VARCHAR},
+        {"active", DataType::BOOL}
     }, problems);
 
     CHECK(id1.has_value());
     CHECK(problems.empty());
 
     problems.clear();
-    auto id_dup = ms.create_table("users", {{"id", ColumnType::INT64}}, problems);
+    auto id_dup = ms.create_table("users", {{"id", DataType::INT64}}, problems);
     CHECK(!id_dup.has_value());
     CHECK(!problems.empty());
 
     problems.clear();
     auto id_dup_col = ms.create_table("orders", {
-        {"id", ColumnType::INT64},
-        {"id", ColumnType::VARCHAR}
+        {"id", DataType::INT64},
+        {"id", DataType::VARCHAR}
     }, problems);
     CHECK(!id_dup_col.has_value());
     CHECK(!problems.empty());
@@ -57,8 +49,8 @@ void test_persistence_across_restart(const fs::path& dir) {
         Metastore ms(dir);
         std::vector<ValidationProblem> problems;
         auto id = ms.create_table("events", {
-            {"ts", ColumnType::INT64},
-            {"payload", ColumnType::VARCHAR}
+            {"ts", DataType::INT64},
+            {"payload", DataType::VARCHAR}
         }, problems);
         CHECK(id.has_value());
         saved_id = *id;
@@ -83,7 +75,7 @@ void test_persistence_across_restart(const fs::path& dir) {
         CHECK(meta->table_id == saved_id);
         CHECK(meta->columns.size() == 2);
         CHECK(meta->columns[0].name == "ts");
-        CHECK(meta->columns[0].type == ColumnType::INT64);
+        CHECK(meta->columns[0].type == DataType::INT64);
         CHECK(meta->files.size() == 1);
         CHECK(fs::exists(meta->files[0]->path()));
     }
