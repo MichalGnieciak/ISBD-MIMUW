@@ -31,10 +31,14 @@ target_include_directories(DbCore PUBLIC
     "${PROJ2_DIR}/src/utils"
 )
 target_link_libraries(DbCore PUBLIC zstd::libzstd_shared)
+# Utils
+add_library(Utils STATIC src/utils/uid.cpp)
+target_include_directories(Utils PUBLIC src)
 # Metastore
 add_library(Metastore STATIC src/metastore/metastore.cpp)
 target_include_directories(Metastore PUBLIC src)
 target_link_libraries(Metastore PUBLIC
+    Utils
     DbCore
     Threads::Threads
     nlohmann_json::nlohmann_json
@@ -46,21 +50,42 @@ target_link_libraries(CsvParser PUBLIC
     Metastore
     DbCore
 )
+# Query Engine (Planner + Executor + Registry)
+add_library(QueryEngine STATIC
+    src/query/planner/planner.cpp
+    src/query/registry/query_registry.cpp
+    src/query/executor/executor.cpp
+)
+target_include_directories(QueryEngine PUBLIC src)
+target_link_libraries(QueryEngine PUBLIC
+    Metastore
+    CsvParser
+    DbCore
+    Utils
+    Threads::Threads
+)
 
 # Executables
 add_executable(isbd_server src/main.cpp)
 target_include_directories(isbd_server PRIVATE src)
 target_link_libraries(isbd_server PRIVATE
-    DbCore
+    QueryEngine
     Threads::Threads
     nlohmann_json::nlohmann_json
     cpp-httplib
 )
 
 # Tests
+enable_testing()
 # Metastore test
 add_executable(test_metastore test/test_metastore.cpp)
 target_link_libraries(test_metastore PRIVATE Metastore)
+add_test(NAME MetastoreTests COMMAND test_metastore)
 # CSV parser test
 add_executable(test_csv_parser test/test_csv_parser.cpp)
 target_link_libraries(test_csv_parser PRIVATE CsvParser)
+add_test(NAME CsvParserTests COMMAND test_csv_parser)
+# Query engine test
+add_executable(test_query_engine test/test_query_engine.cpp)
+target_link_libraries(test_query_engine PRIVATE QueryEngine)
+add_test(NAME QueryEngineTests COMMAND test_query_engine)
