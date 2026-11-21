@@ -1,29 +1,11 @@
 #include "query_registry.h"
 #include "utils/uid.h"
+#include <algorithm>
 #include <mutex>
 
 namespace isbd {
 
-std::string query_type_to_string(QueryType type) {
-    switch (type) {
-        case QueryType::COPY:   return "COPY";
-        case QueryType::SELECT: return "SELECT";
-    }
-    return "UNKNOWN";
-}
-
-std::string query_status_to_string(QueryStatus status) {
-    switch (status) {
-        case QueryStatus::CREATED:   return "CREATED";
-        case QueryStatus::PLANNING:  return "PLANNING";
-        case QueryStatus::RUNNING:   return "RUNNING";
-        case QueryStatus::COMPLETED: return "COMPLETED";
-        case QueryStatus::FAILED:    return "FAILED";
-    }
-    return "UNKNOWN";
-}
-
-std::string QueryRegistry::create_query(QueryType type) {
+std::string QueryRegistry::create_query(QueryType type, std::string query_definition_json) {
     std::string id = generate_uid();
 
     std::unique_lock lock(mutex_);
@@ -32,6 +14,7 @@ std::string QueryRegistry::create_query(QueryType type) {
     record.type = type;
     record.status = QueryStatus::CREATED;
     record.is_result_available = false;
+    record.query_definition_json = std::move(query_definition_json);
 
     insertion_order_.push_back(id);
     queries_.emplace(id, std::move(record));
@@ -72,6 +55,10 @@ void QueryRegistry::fail_query(
     const std::string& error_message,
     std::vector<ValidationProblem> problems) {
 
+    if (problems.empty() && !error_message.empty()) {
+        problems.push_back({error_message, ""});
+    }
+
     std::unique_lock lock(mutex_);
     auto it = queries_.find(query_id);
     if (it != queries_.end()) {
@@ -101,6 +88,88 @@ std::vector<QuerySummary> QueryRegistry::list_queries() const {
         summaries.push_back({rec.query_id, rec.type, rec.status, rec.is_result_available});
     }
     return summaries;
+}
+
+SelectResultData QueryRegistry::slice_result(
+    const SelectResultData& source,
+    std::optional<size_t> row_limit) {
+
+    if (!row_limit.has_value() || *row_limit >= source.total_rows) {
+        return source;
+    }
+
+    SelectResultData sliced;
+    sliced.schema = source.schema;
+    sliced.total_rows = 0;
+
+    size_t remaining = *row_limit;
+    for (const Batch& src_batch : source.batches) {
+        if (remaining == 0) {
+            break;
+        }
+        if (src_batch.num_rows == 0) {
+            continue;
+        }
+
+        if (src_batch.num_rows <= remaining) {
+            sliced.batches.push_back(src_batch);
+            sliced.total_rows += src_batch.num_rows;
+            remaining -= src_batch.num_rows;
+        } else {
+            // Partial batch truncation
+            Batch partial;
+            partial.num_rows = remaining;
+            partial.columns.reserve(src_batch.columns.size());
+
+            for (const ColumnData& col : src_batch.columns) {
+                std::visit([&](const auto& vec) {
+                    using VecType = std::decay_t<decltype(vec)>;
+                    partial.columns.emplace_back(VecType(vec.begin(), vec.begin() + remaining));
+                }, col);
+            }
+
+            sliced.total_rows += remaining;
+            sliced.batches.push_back(std::move(partial));
+            remaining = 0;
+        }
+    }
+
+    return sliced;
+}
+
+ResultFetchStatus QueryRegistry::fetch_select_result(
+    const std::string& query_id,
+    std::optional<size_t> row_limit,
+    bool flush_result,
+    SelectResultData& out_result) {
+
+    if (flush_result) {
+        std::unique_lock lock(mutex_);
+        auto it = queries_.find(query_id);
+        if (it == queries_.end()) {
+            return ResultFetchStatus::NOT_FOUND;
+        }
+        if (!it->second.is_result_available || !it->second.select_result.has_value()) {
+            return ResultFetchStatus::NOT_AVAILABLE;
+        }
+
+        out_result = slice_result(*it->second.select_result, row_limit);
+        it->second.select_result.reset();
+        it->second.is_result_available = false;
+        return ResultFetchStatus::SUCCESS;
+    } else {
+        std::shared_lock lock(mutex_);
+        auto it = queries_.find(query_id);
+        if (it == queries_.end()) {
+            return ResultFetchStatus::NOT_FOUND;
+        }
+        if (!it->second.is_result_available || !it->second.select_result.has_value()) {
+            return ResultFetchStatus::NOT_AVAILABLE;
+        }
+
+        out_result = slice_result(*it->second.select_result, row_limit);
+        return ResultFetchStatus::SUCCESS;
+    }
 }
 
 } // namespace isbd

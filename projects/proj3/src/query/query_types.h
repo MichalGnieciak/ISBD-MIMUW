@@ -23,6 +23,12 @@ enum class QueryStatus {
     FAILED
 };
 
+enum class ResultFetchStatus {
+    SUCCESS,
+    NOT_FOUND,
+    NOT_AVAILABLE
+};
+
 std::string query_type_to_string(QueryType type);
 std::string query_status_to_string(QueryStatus status);
 
