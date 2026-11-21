@@ -11,11 +11,11 @@ PlanResult Planner::plan_copy(
 
     std::vector<ValidationProblem> problems;
 
+    // Validating table 
     if (request.table_name.empty()) {
         problems.push_back({"Target table name cannot be empty", "destinationTableName"});
         return problems;
     }
-
     auto table_opt = metastore.get_table_by_name(request.table_name);
     if (!table_opt.has_value()) {
         problems.push_back({
@@ -27,6 +27,7 @@ PlanResult Planner::plan_copy(
 
     const TableMetadata& table = *table_opt;
 
+    // Validating request options
     CopyOptions options{
         request.source_file,
         request.does_csv_contain_header,
@@ -52,6 +53,7 @@ PlanResult Planner::plan_copy(
         }
     }
 
+    // Creating the plan
     CopyPlan plan;
     plan.query_id = query_id;
     plan.table_id = table.table_id;
@@ -71,12 +73,12 @@ PlanResult Planner::plan_select(
     const Metastore& metastore) {
 
     std::vector<ValidationProblem> problems;
-
+    
+    // Validating table
     if (request.table_name.empty()) {
         problems.push_back({"Table name cannot be empty", "tableName"});
         return problems;
     }
-
     auto table_opt = metastore.get_table_by_name(request.table_name);
     if (!table_opt.has_value()) {
         problems.push_back({
@@ -86,6 +88,7 @@ PlanResult Planner::plan_select(
         return problems;
     }
 
+    // Validating request
     if (request.column_names.empty()) {
         problems.push_back({"SELECT requires at least one column in columnNames", "columnNames"});
         return problems;
@@ -100,6 +103,7 @@ PlanResult Planner::plan_select(
         col_lookup[table.columns[i].name] = i;
     }
 
+    // Creating the plan
     SelectPlan plan;
     plan.query_id = query_id;
     plan.table_id = table.table_id;

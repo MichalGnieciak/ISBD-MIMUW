@@ -52,6 +52,7 @@ target_link_libraries(CsvParser PUBLIC
 )
 # Query Engine (Planner + Executor + Registry)
 add_library(QueryEngine STATIC
+    src/query/query_types.cpp
     src/query/planner/planner.cpp
     src/query/registry/query_registry.cpp
     src/query/executor/executor.cpp

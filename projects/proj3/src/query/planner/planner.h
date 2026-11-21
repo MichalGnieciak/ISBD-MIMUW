@@ -1,8 +1,7 @@
 #pragma once
-
 #include "csv/csv_parser.h"
 #include "metastore/metastore.h"
-
+#include "query/query_types.h"
 #include <cstddef>
 #include <filesystem>
 #include <memory>
@@ -11,19 +10,6 @@
 #include <vector>
 
 namespace isbd {
-
-struct CopyRequest {
-    std::string table_name;
-    std::filesystem::path source_file;
-    bool does_csv_contain_header = false;
-    // Column mapping with 1-1 default
-    std::vector<std::string> destination_columns;
-};
-
-struct SelectRequest {
-    std::string table_name;
-    std::vector<std::string> column_names;
-};
 
 // Immutable execution plan for COPY
 struct CopyPlan {

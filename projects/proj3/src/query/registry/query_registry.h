@@ -1,6 +1,7 @@
 #pragma once
 #include "batch.h"
 #include "metastore/metastore.h"
+#include "query/query_types.h"
 #include <cstdint>
 #include <optional>
 #include <shared_mutex>
@@ -9,28 +10,6 @@
 #include <vector>
 
 namespace isbd {
-
-enum class QueryType {
-    COPY,
-    SELECT
-};
-
-enum class QueryStatus {
-    CREATED,
-    PLANNING,
-    RUNNING,
-    COMPLETED,
-    FAILED
-};
-
-std::string query_type_to_string(QueryType type);
-std::string query_status_to_string(QueryStatus status);
-
-struct SelectResultData {
-    std::vector<ColumnSchema> schema;
-    std::vector<Batch> batches;
-    uint64_t total_rows = 0;
-};
 
 struct QueryRecord {
     std::string query_id;
