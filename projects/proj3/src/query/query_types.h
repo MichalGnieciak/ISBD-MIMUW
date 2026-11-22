@@ -1,8 +1,6 @@
 #pragma once
-
 #include "batch.h"
 #include "metastore/metastore.h"
-
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -27,6 +25,11 @@ enum class ResultFetchStatus {
     SUCCESS,
     NOT_FOUND,
     NOT_AVAILABLE
+};
+
+enum class ErrorFetchStatus {
+    NOT_FOUND,
+    NOT_FAILED
 };
 
 std::string query_type_to_string(QueryType type);

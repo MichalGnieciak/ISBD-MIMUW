@@ -2,6 +2,9 @@
 
 A multi-threaded, REST-based analytical Database Management System built in C++17 on top of the custom `.isbd` columnar storage engine from Lab 2. It provides a persistent catalog (**Metastore**), asynchronous query execution (**Planner** & **Executor**), streaming CSV ingestion (`COPY`), and full table scans (`SELECT`).
 
+### REST API & OpenAPI Tooling
+Implemented the 10 REST endpoints directly with `cpp-httplib` and `nlohmann::json` rather than using OpenAPI Generator's `cpp-httplib-server` target. Inspecting the generated C++ server for `dbmsInterface.yaml` revealed duplicate route controllers from multi-tagged endpoints (`Proj3` duplicating `Schema`, `Execution`, and `Metadata`), empty stubs for polymorphic `oneOf` schemas (`queryDefinition` and mixed-type `QueryResult` columns), and incorrect response signatures that dropped array wrappers on `GET /tables`, `GET /queries`, and `GET /result/{queryId}` as well as the `200 OK` success response on `DELETE /table/{tableId}`. OpenAPI Generator is instead used to generate a typed Python client from `dbmsInterface.yaml` for end-to-end `pytest` testing.
+
 ## Quick Start with Docker (Recommended)
 
 ### 1. Build the Docker Image

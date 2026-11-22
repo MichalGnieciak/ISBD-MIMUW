@@ -37,6 +37,12 @@ public:
     // Generates a unique query ID and registers it in CREATED state
     std::string create_query(QueryType type, std::string query_definition_json = "{}");
 
+    // Registers a pre-generated query ID in CREATED state
+    // so requests that fail semantic validation with 400 Bad Request do not pollute GET /queries
+    void register_query(const std::string& query_id,
+                        QueryType type,
+                        std::string query_definition_json = "{}");
+
     // State transition helpers (exclusive lock)
     void set_status(const std::string& query_id, QueryStatus status);
     void complete_copy(const std::string& query_id, uint64_t rows_ingested);

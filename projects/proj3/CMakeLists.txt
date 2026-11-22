@@ -12,7 +12,8 @@ endif()
 
 find_package(Threads REQUIRED)
 find_package(zstd REQUIRED)
-find_package(nlohmann_json REQUIRED)
+find_package(nlohmann_json 3.2.0 REQUIRED)
+find_library(CPP_HTTPLIB_LIBRARY NAMES cpp-httplib REQUIRED)
 
 # Libraries
 # Storage Engine (DbCore)
@@ -65,15 +66,34 @@ target_link_libraries(QueryEngine PUBLIC
     Utils
     Threads::Threads
 )
+# API server
+add_library(ApiServer STATIC
+    src/api/dto/common_dto.cpp
+    src/api/dto/schema_dto.cpp
+    src/api/dto/query_dto.cpp
+    src/api/dto/system_dto.cpp
+    src/api/services/schema_service.cpp
+    src/api/services/execution_service.cpp
+    src/api/services/metadata_service.cpp
+    src/api/controllers/schema_controller.cpp
+    src/api/controllers/execution_controller.cpp
+    src/api/controllers/metadata_controller.cpp
+    src/api/server.cpp
+)
+target_include_directories(ApiServer PUBLIC src)
+target_link_libraries(ApiServer PUBLIC
+    QueryEngine
+    ${CPP_HTTPLIB_LIBRARY}
+    nlohmann_json::nlohmann_json
+    Threads::Threads
+)
 
 # Executables
 add_executable(isbd_server src/main.cpp)
 target_include_directories(isbd_server PRIVATE src)
 target_link_libraries(isbd_server PRIVATE
-    QueryEngine
+    ApiServer
     Threads::Threads
-    nlohmann_json::nlohmann_json
-    cpp-httplib
 )
 
 # Tests

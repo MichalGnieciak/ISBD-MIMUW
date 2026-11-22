@@ -7,18 +7,25 @@ namespace isbd {
 
 std::string QueryRegistry::create_query(QueryType type, std::string query_definition_json) {
     std::string id = generate_uid();
+    register_query(id, type, std::move(query_definition_json));
+    return id;
+}
+
+void QueryRegistry::register_query(
+    const std::string& query_id,
+    QueryType type,
+    std::string query_definition_json) {
 
     std::unique_lock lock(mutex_);
     QueryRecord record;
-    record.query_id = id;
+    record.query_id = query_id;
     record.type = type;
     record.status = QueryStatus::CREATED;
     record.is_result_available = false;
     record.query_definition_json = std::move(query_definition_json);
 
-    insertion_order_.push_back(id);
-    queries_.emplace(id, std::move(record));
-    return id;
+    insertion_order_.push_back(query_id);
+    queries_.emplace(query_id, std::move(record));
 }
 
 void QueryRegistry::set_status(const std::string& query_id, QueryStatus status) {
