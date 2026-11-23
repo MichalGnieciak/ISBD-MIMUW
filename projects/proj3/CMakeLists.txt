@@ -12,7 +12,8 @@ endif()
 
 find_package(Threads REQUIRED)
 find_package(zstd REQUIRED)
-find_package(nlohmann_json REQUIRED)
+find_package(nlohmann_json 3.2.0 REQUIRED)
+find_library(CPP_HTTPLIB_LIBRARY NAMES cpp-httplib)
 
 # Libraries
 # Storage Engine (DbCore)
@@ -31,9 +32,11 @@ target_include_directories(DbCore PUBLIC
     "${PROJ2_DIR}/src/utils"
 )
 target_link_libraries(DbCore PUBLIC zstd::libzstd_shared)
+
 # Utils
 add_library(Utils STATIC src/utils/uid.cpp)
 target_include_directories(Utils PUBLIC src)
+
 # Metastore
 add_library(Metastore STATIC src/metastore/metastore.cpp)
 target_include_directories(Metastore PUBLIC src)
@@ -43,6 +46,7 @@ target_link_libraries(Metastore PUBLIC
     Threads::Threads
     nlohmann_json::nlohmann_json
 )
+
 # CSV parser
 add_library(CsvParser STATIC src/csv/csv_parser.cpp)
 target_include_directories(CsvParser PUBLIC src)
@@ -50,6 +54,7 @@ target_link_libraries(CsvParser PUBLIC
     Metastore
     DbCore
 )
+
 # Query Engine (Planner + Executor + Registry)
 add_library(QueryEngine STATIC
     src/query/query_types.cpp
@@ -66,27 +71,52 @@ target_link_libraries(QueryEngine PUBLIC
     Threads::Threads
 )
 
+# API server
+add_library(ApiServer STATIC
+    src/api/dto/common_dto.cpp
+    src/api/dto/schema_dto.cpp
+    src/api/dto/query_dto.cpp
+    src/api/dto/system_dto.cpp
+    src/api/services/schema_service.cpp
+    src/api/services/execution_service.cpp
+    src/api/services/metadata_service.cpp
+    src/api/controllers/schema_controller.cpp
+    src/api/controllers/execution_controller.cpp
+    src/api/controllers/metadata_controller.cpp
+    src/api/server.cpp
+)
+target_include_directories(ApiServer PUBLIC src)
+target_link_libraries(ApiServer PUBLIC
+    QueryEngine
+    $<$<BOOL:${CPP_HTTPLIB_LIBRARY}>:${CPP_HTTPLIB_LIBRARY}>
+    nlohmann_json::nlohmann_json
+    Threads::Threads
+)
+
 # Executables
 add_executable(isbd_server src/main.cpp)
 target_include_directories(isbd_server PRIVATE src)
 target_link_libraries(isbd_server PRIVATE
-    QueryEngine
+    ApiServer
     Threads::Threads
-    nlohmann_json::nlohmann_json
-    cpp-httplib
 )
 
-# Tests
+# Unit & E2E Tests
 enable_testing()
-# Metastore test
+
 add_executable(test_metastore test/test_metastore.cpp)
 target_link_libraries(test_metastore PRIVATE Metastore)
 add_test(NAME MetastoreTests COMMAND test_metastore)
-# CSV parser test
+
 add_executable(test_csv_parser test/test_csv_parser.cpp)
 target_link_libraries(test_csv_parser PRIVATE CsvParser)
 add_test(NAME CsvParserTests COMMAND test_csv_parser)
-# Query engine test
+
 add_executable(test_query_engine test/test_query_engine.cpp)
 target_link_libraries(test_query_engine PRIVATE QueryEngine)
 add_test(NAME QueryEngineTests COMMAND test_query_engine)
+
+add_custom_target(test_e2e
+    COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_CURRENT_SOURCE_DIR}" make test-e2e
+    COMMENT "Generating Python OpenAPI client, running E2E tests, and cleaning up generated_client"
+)

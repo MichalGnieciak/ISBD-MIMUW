@@ -4,9 +4,9 @@
 
 # Using Ubuntu 24.04 to have dependencies available under apt
 # build-essential & cmake: for C++
-# libzstd-dev: ZSTD 
-# nlohmann-json3-dev: JSON library for the Metastore and REST payloads.
-# libcpp-httplib-dev: C++ HTTP server library (supports reading JSON bodies and multi-threaded request handling).
+# libzstd-dev: ZSTD compression library
+# nlohmann-json3-dev: JSON library for the Metastore and REST payloads
+# cpp-httplib v0.18.3 (header-only): supports reading JSON request bodies on GET /result/{queryId}
 
 # Stage 1
 # Building
@@ -20,7 +20,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     libzstd-dev \
     nlohmann-json3-dev \
-    libcpp-httplib-dev \
+    curl \
+    ca-certificates \
+    && curl -fsSL https://raw.githubusercontent.com/yhirose/cpp-httplib/v0.18.3/httplib.h \
+       -o /usr/local/include/httplib.h \
+    && sed -i 's/req.method == "POST" || req.method == "PUT"/req.method == "GET" || req.method == "POST" || req.method == "PUT"/' /usr/local/include/httplib.h \
+    && grep -q 'req.method == "GET"' /usr/local/include/httplib.h \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -39,10 +44,10 @@ RUN cmake -S /app/projects/proj3 -B /app/build -DCMAKE_BUILD_TYPE=Release && \
 FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-# Dependencies
+
+# Runtime dependencies (cpp-httplib is compiled header-only into isbd_server)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libzstd1 \
-    libcpp-httplib-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -59,5 +64,4 @@ EXPOSE 8080
 # Starting the database server pointing to /data/db
 ENTRYPOINT ["/app/isbd_server"]
 # Default data directory is /data/db and port is 8080
-# Specyfing data-dir for local testing without docker
 CMD ["--data-dir", "/data/db", "--port", "8080"]
