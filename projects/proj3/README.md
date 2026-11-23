@@ -92,7 +92,14 @@ ctest --test-dir build --output-on-failure --verbose
 
 ## Running End-to-End REST API Tests
 
-`test/test_e2e.py` tests the running server over HTTP using a Python SDK generated from `../../interface/dbmsInterface.yaml`.
+`test/test_e2e.py` validates the containerized server over HTTP using a Python SDK generated from `../../interface/dbmsInterface.yaml` and covers seven end-to-end scenarios:
+- **`test_system_info`** — Verifies `GET /system/info` reports interface version `2.1.0` and a valid server uptime.
+- **`test_table_lifecycle_and_validation`** — Tests table creation (`PUT /table`), duplicate name rejection (`400`), catalog listing (`GET /tables`), schema inspection (`GET /table/{tableId}`), deletion (`DELETE /table/{tableId}`), and post-deletion `404` responses.
+- **`test_copy_select_and_result_pagination`** — Exercises semicolon-delimited `COPY` ingestion, `SELECT` column projections, partial `GET /result/{queryId}` fetching (`rowLimit` without flushing), full fetching with `flushResult: true`, and `400` errors on reads after flushing.
+- **`test_failed_copy_validation_and_error_endpoint`** — Confirms non-existent CSV paths fail synchronously during planning (`400`), while malformed CSV rows fail asynchronously during execution and report details via `GET /error/{queryId}`.
+- **`test_columns_and_data_persistence_across_restart`** — Populates a table covering every `LogicalColumnType`, restarts the Docker container, and verifies both catalog schemas (`metastore.json`) and `.isbd` columnar data persist across restarts.
+- **`test_large_multi_batch_csv_and_cross_batch_pagination`** — Ingests a 150,000-row CSV spanning multiple `Batch::BATCH_SIZE` chunks and verifies multi-batch serialization alongside `rowLimit` slicing across batch boundaries.
+- **`test_multi_part_table_appends_and_scans_all_parts`** — Appends multiple `COPY` jobs into a single table, confirms separate `part_<uid>.isbd` files are written on disk, and verifies `SELECT` scans across all parts in order.
 
 ### Automated One-Step Run (`Makefile` / CMake)
 Builds the Docker image, generates `generated_client/`, starts a temporary server container, runs `pytest test/test_e2e.py -v`, and removes `generated_client/` and the temporary container afterward (run from `projects/proj3`):
@@ -110,11 +117,20 @@ docker run --rm -v "${PWD}/../..:/local" openapitools/openapi-generator-cli gene
 
 # 2. Start server & run pytest in a disposable container
 mkdir -Force .\data
-docker run -d --name isbd-e2e -p 8080:8080 -v "${PWD}\data:/data" isbd-db
-docker run --rm --network container:isbd-e2e -v "${PWD}:/work" -w /work python:3.12-slim `
+docker rm -f isbd-e2e 2>$null
+docker network create isbd-net 2>$null
+docker run -d --name isbd-e2e --network isbd-net -p 8080:8080 -v "${PWD}\data:/data" isbd-db
+
+docker run --rm --network isbd-net `
+  -e ISBD_BASE_URL=http://isbd-e2e:8080 `
+  -e ISBD_CONTAINER_NAME=isbd-e2e `
+  -v /var/run/docker.sock:/var/run/docker.sock `
+  -v "${PWD}:/work" -w /work `
+  python:3.12-slim `
   sh -c "pip install -q -e ./generated_client pytest && pytest test/test_e2e.py -v"
 
 # 3. Clean up
 docker rm -f isbd-e2e
+docker network rm isbd-net
 Remove-Item -Recurse -Force .\generated_client
 ```
