@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && curl -fsSL https://raw.githubusercontent.com/yhirose/cpp-httplib/v0.18.3/httplib.h \
        -o /usr/local/include/httplib.h \
-    && sed -i 's/req.method == "POST" || req.method == "PUT"/req.method == "GET" || req.method == "POST" || req.method == "PUT"/' /usr/local/include/httplib.h \
+    && sed -i 's/req.method == "POST" || req.method == "PUT"/(req.method == "GET" \&\& (req.has_header("Content-Length") || req.has_header("Transfer-Encoding"))) || req.method == "POST" || req.method == "PUT"/' /usr/local/include/httplib.h \
     && grep -q 'req.method == "GET"' /usr/local/include/httplib.h \
     && rm -rf /var/lib/apt/lists/*
 

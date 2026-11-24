@@ -169,6 +169,7 @@ CopyResult CsvParser::parse_to_isbd(
 
         std::string line;
         size_t line_num = 0;
+        const bool allow_extra_csv_cols = !options.destination_columns.empty();
 
         if (options.does_csv_contain_header) {
             if (!std::getline(in, line)) {
@@ -176,7 +177,8 @@ CopyResult CsvParser::parse_to_isbd(
             }
             ++line_num;
             auto header_tokens = split_semicolon_line(line);
-            if (header_tokens.size() != num_cols) {
+            if (allow_extra_csv_cols ? (header_tokens.size() < num_cols)
+                                     : (header_tokens.size() != num_cols)) {
                 throw std::runtime_error(
                     "Header column count (" + std::to_string(header_tokens.size()) +
                     ") does not match table column count (" + std::to_string(num_cols) + ")");
@@ -194,7 +196,8 @@ CopyResult CsvParser::parse_to_isbd(
             }
 
             std::vector<std::string> tokens = split_semicolon_line(line);
-            if (tokens.size() != num_cols) {
+            if (allow_extra_csv_cols ? (tokens.size() < num_cols)
+                                     : (tokens.size() != num_cols)) {
                 throw std::runtime_error(
                     "Line " + std::to_string(line_num) + ": expected " + std::to_string(num_cols) +
                     " columns, got " + std::to_string(tokens.size()));
