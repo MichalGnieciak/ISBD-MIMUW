@@ -616,3 +616,93 @@ def test_multi_part_table_appends_and_scans_all_parts(api_clients):
         for csv_path in csv_paths:
             csv_path.unlink(missing_ok=True)
         schema_api.delete_table(table_id=table_id)
+
+def test_copy_with_destination_columns_and_extra_csv_columns(api_clients):
+    schema_api: SchemaApi = api_clients["schema"]
+    exec_api: ExecutionApi = api_clients["execution"]
+
+    table_id = schema_api.create_table(
+        table_schema=TableSchema(
+            name="mapped_people_test",
+            columns=[
+                Column(name="c1", type=LogicalColumnType.VARCHAR),
+                Column(name="c2", type=LogicalColumnType.INT64),
+                Column(name="c3", type=LogicalColumnType.VARCHAR),
+            ],
+        )
+    )
+    csv_path = HOST_DATA_DIR / "mapped_people.csv"
+
+    try:
+        # CSV has 5 columns in a different order than the 3-column target table
+        csv_path.write_text(
+            "id;name;surname;extra_num;extra_note\n"
+            "101;Alice;Smith;999;ignored_a\n"
+            "202;Bob;Jones;888;ignored_b\n",
+            encoding="utf-8",
+        )
+
+        copy_id = exec_api.submit_query(
+            execute_query_request=ExecuteQueryRequest(
+                query_definition=QueryQueryDefinition(
+                    CopyQuery(
+                        source_filepath="/data/mapped_people.csv",
+                        destination_table_name="mapped_people_test",
+                        does_csv_contain_header=True,
+                        destination_columns=["c2", "c1", "c3"],
+                    )
+                )
+            )
+        )
+        copy_state = wait_for_query(exec_api, copy_id)
+        if copy_state.status != QueryStatus.COMPLETED:
+            err = exec_api.get_query_error(query_id=copy_id)
+            pytest.fail(f"Mapped COPY failed with problems: {err.problems}")
+
+        select_id = exec_api.submit_query(
+            execute_query_request=ExecuteQueryRequest(
+                query_definition=QueryQueryDefinition(
+                    SelectQuery(
+                        column_clauses=[
+                            ColumnExpression(
+                                ColumnReferenceExpression(
+                                    table_name="mapped_people_test", column_name="c1"
+                                )
+                            ),
+                            ColumnExpression(
+                                ColumnReferenceExpression(
+                                    table_name="mapped_people_test", column_name="c2"
+                                )
+                            ),
+                            ColumnExpression(
+                                ColumnReferenceExpression(
+                                    table_name="mapped_people_test", column_name="c3"
+                                )
+                            ),
+                        ]
+                    )
+                )
+            )
+        )
+        select_state = wait_for_query_raw(exec_api, select_id)
+        if select_state["status"] != "COMPLETED":
+            err = exec_api.get_query_error(query_id=select_id)
+            pytest.fail(f"SELECT failed with problems: {err.problems}")
+
+        batches = get_query_result_with_body(select_id, {"flushResult": True})
+        assert sum(b["rowCount"] for b in batches) == 2
+
+        c1_vals: list[str] = []
+        c2_vals: list[int] = []
+        c3_vals: list[str] = []
+        for batch in batches:
+            c1_vals.extend(batch["columns"][0])
+            c2_vals.extend(batch["columns"][1])
+            c3_vals.extend(batch["columns"][2])
+
+        assert c1_vals == ["Alice", "Bob"]
+        assert c2_vals == [101, 202]
+        assert c3_vals == ["Smith", "Jones"]
+    finally:
+        csv_path.unlink(missing_ok=True)
+        schema_api.delete_table(table_id=table_id)
