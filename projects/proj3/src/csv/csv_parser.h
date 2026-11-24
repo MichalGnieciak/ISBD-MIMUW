@@ -1,11 +1,8 @@
 #pragma once
-
-#include "metastore/metastore.h"
-#include "format.h"
 #include "batch.h"
-
-#include <cstddef>
 #include <filesystem>
+#include "format.h"
+#include "metastore/metastore.h"
 #include <string>
 #include <vector>
 

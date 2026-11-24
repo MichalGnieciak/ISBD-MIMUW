@@ -1,9 +1,7 @@
-#include "server.h"
-
 #include "api/dto/common_dto.h"
 #include "api/http_utils.h"
-
 #include <exception>
+#include "server.h"
 
 namespace isbd::api {
 

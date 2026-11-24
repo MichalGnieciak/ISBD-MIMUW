@@ -1,10 +1,10 @@
 #pragma once
-#include "metastore/metastore.h"
-#include "query/planner/planner.h"
-#include "query/registry/query_registry.h"
 #include <condition_variable>
 #include <cstddef>
+#include "metastore/metastore.h"
 #include <mutex>
+#include "query/planner/planner.h"
+#include "query/registry/query_registry.h"
 #include <queue>
 #include <thread>
 #include <vector>

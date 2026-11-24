@@ -1,10 +1,10 @@
-#include "metastore/metastore.h"
-#include "test_utils.h"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include "metastore/metastore.h"
 #include <stdexcept>
 #include <string>
+#include "test_utils.h"
 #include <vector>
 
 namespace fs = std::filesystem;

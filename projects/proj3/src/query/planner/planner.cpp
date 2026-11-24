@@ -1,5 +1,4 @@
 #include "planner.h"
-
 #include <unordered_map>
 
 namespace isbd {

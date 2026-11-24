@@ -1,14 +1,14 @@
-#include "metastore.h"
-#include "utils/uid.h"
-#include <nlohmann/json.hpp>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include "metastore.h"
+#include <mutex>
+#include <nlohmann/json.hpp>
 #include <random>
 #include <sstream>
 #include <stdexcept>
 #include <unordered_set>
-#include <mutex>
+#include "utils/uid.h"
 
 #ifndef _WIN32
 #include <fcntl.h>
@@ -186,7 +186,6 @@ bool Metastore::commit_copy_files(
 }
 
 // Crash-Safe Persistence (CRC32 + Temp File + Atomic Rename)
-
 void Metastore::persist_to_disk() const {
     json tables_json = json::array();
 

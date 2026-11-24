@@ -1,13 +1,13 @@
 #pragma once
 #include "common_dto.h"
-#include "../../query/query_types.h"
-#include "query/registry/query_registry.h"
 #include <cstddef>
 #include <nlohmann/json.hpp>
 #include <optional>
+#include "query/registry/query_registry.h"
 #include <string>
 #include <variant>
 #include <vector>
+#include "../../query/query_types.h"
 
 namespace isbd::api {
 

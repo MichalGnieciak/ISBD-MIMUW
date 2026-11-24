@@ -1,6 +1,4 @@
 #pragma once
-#include "../dto/common_dto.h"
-#include "../dto/query_dto.h"
 #include "metastore/metastore.h"
 #include "query/executor/executor.h"
 #include "query/query_types.h"
@@ -9,6 +7,8 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include "../dto/common_dto.h"
+#include "../dto/query_dto.h"
 
 namespace isbd::api {
 

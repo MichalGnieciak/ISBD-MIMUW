@@ -1,12 +1,12 @@
+#include <chrono>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 #include "metastore/metastore.h"
 #include "query/executor/executor.h"
 #include "query/planner/planner.h"
 #include "query/registry/query_registry.h"
 #include "test_utils.h"
-#include <chrono>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
 #include <thread>
 #include <vector>
 
