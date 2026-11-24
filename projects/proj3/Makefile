@@ -22,7 +22,8 @@ test-docker:
 
 generate-client:
 	rm -rf generated_client
-	docker run --rm \
+	mkdir -p generated_client
+	docker run --rm --user $$(id -u):$$(id -g) \
 		-v "$(REPO_ROOT):/local" \
 		openapitools/openapi-generator-cli generate \
 		-i /local/interface/dbmsInterface.yaml \
@@ -41,10 +42,11 @@ test-e2e: docker generate-client
 	docker run --rm --network isbd-net \
 		-e ISBD_BASE_URL=http://$(E2E_CONTAINER_NAME):8080 \
 		-e ISBD_CONTAINER_NAME=$(E2E_CONTAINER_NAME) \
+		-e PYTHONDONTWRITEBYTECODE=1 \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v "$$(pwd):/work" -w /work \
 		python:3.12-slim \
-		sh -c "pip install -q -e ./generated_client pytest && pytest test/test_e2e.py -v"; \
+		sh -c "pip install -q --no-compile ./generated_client pytest && pytest test/test_e2e.py -v -p no:cacheprovider"; \
 	TEST_EXIT=$$?; \
 	docker rm -f $(E2E_CONTAINER_NAME) >/dev/null 2>&1 || true; \
 	docker network rm isbd-net >/dev/null 2>&1 || true; \
