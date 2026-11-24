@@ -41,4 +41,13 @@ bool try_parse_optional_body(const httplib::Request& req, TDto& out_dto, httplib
     return true;
 }
 
+inline bool is_whitespace_only(const std::string& s) {
+    for (unsigned char ch : s) {
+        if (!std::isspace(ch)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 } // namespace isbd::api

@@ -1,9 +1,9 @@
 #pragma once
-#include "metastore/metastore.h"
-#include "query/query_types.h"
 #include <cstddef>
 #include <cstdint>
+#include "metastore/metastore.h"
 #include <optional>
+#include "query/query_types.h"
 #include <shared_mutex>
 #include <string>
 #include <unordered_map>

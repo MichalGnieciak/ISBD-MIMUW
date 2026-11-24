@@ -1,10 +1,10 @@
 #pragma once
-#include "csv/csv_parser.h"
-#include "metastore/metastore.h"
-#include "query/query_types.h"
 #include <cstddef>
+#include "csv/csv_parser.h"
 #include <filesystem>
+#include "metastore/metastore.h"
 #include <memory>
+#include "query/query_types.h"
 #include <string>
 #include <variant>
 #include <vector>

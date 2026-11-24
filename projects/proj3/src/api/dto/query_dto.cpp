@@ -1,21 +1,9 @@
-#include "query_dto.h"
 #include <cctype>
 #include <cstdint>
+#include "query_dto.h"
+#include "../http_utils.h"
 
 namespace isbd::api {
-
-namespace {
-
-bool is_whitespace_only(const std::string& s) {
-    for (unsigned char ch : s) {
-        if (!std::isspace(ch)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-} // namespace
 
 bool CopyQueryDto::parse(const nlohmann::json& qdef,
                          CopyQueryDto& out,

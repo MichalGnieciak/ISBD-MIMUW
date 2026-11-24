@@ -1,9 +1,8 @@
-#include "csv_parser.h"
-#include "serializer.h"
-
 #include <algorithm>
 #include <cctype>
+#include "csv_parser.h"
 #include <fstream>
+#include "serializer.h"
 #include <stdexcept>
 #include <unordered_map>
 

@@ -1,7 +1,7 @@
-#include "query_registry.h"
-#include "utils/uid.h"
 #include <algorithm>
 #include <mutex>
+#include "query_registry.h"
+#include "utils/uid.h"
 
 namespace isbd {
 

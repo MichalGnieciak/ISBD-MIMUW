@@ -1,11 +1,11 @@
 #include "./api/server.h"
-#include "metastore/metastore.h"
-#include "query/executor/executor.h"
-#include "query/registry/query_registry.h"
 #include <csignal>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include "metastore/metastore.h"
+#include "query/executor/executor.h"
+#include "query/registry/query_registry.h"
 #include <string>
 
 namespace {
