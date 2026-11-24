@@ -46,7 +46,7 @@ test-e2e: docker generate-client
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v "$$(pwd):/work" -w /work \
 		python:3.12-slim \
-		sh -c "pip install -q --no-compile ./generated_client pytest && pytest test/test_e2e.py -v -p no:cacheprovider"; \
+		sh -c "cp -r /work/generated_client /tmp/client && pip install -q --no-compile /tmp/client pytest && pytest test/test_e2e.py -v -p no:cacheprovider"; \
 	TEST_EXIT=$$?; \
 	docker rm -f $(E2E_CONTAINER_NAME) >/dev/null 2>&1 || true; \
 	docker network rm isbd-net >/dev/null 2>&1 || true; \
