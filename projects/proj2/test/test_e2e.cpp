@@ -7,7 +7,6 @@
 #include <random>
 
 const size_t TOTAL_ROWS = 20000;
-const size_t BATCH_SIZE = 8192;
 const size_t SEED = 42;
 
 int main() {
@@ -34,7 +33,7 @@ int main() {
         Serializer serializer(test_file, schema);
         size_t written = 0;
         while (written < total_rows_to_test) {
-            size_t batch_size = std::min(static_cast<size_t>(BATCH_SIZE), total_rows_to_test - written);
+            size_t batch_size = std::min(static_cast<size_t>(Batch::BATCH_SIZE), total_rows_to_test - written);
             Batch b;
             b.num_rows = batch_size;
             b.columns.push_back(std::vector<int64_t>(original_int.begin() + written, original_int.begin() + written + batch_size));
